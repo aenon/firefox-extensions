@@ -1,1 +1,1 @@
-document.body.style.border = "5px solid red";
+document.body.style.border = "10px solid #FF33FF";

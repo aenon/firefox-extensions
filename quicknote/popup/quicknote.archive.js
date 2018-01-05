@@ -171,7 +171,7 @@ function updateNote(delNote,newTitle,newBody) {
 
 function clearAll() {
   while (noteContainer.firstChild) {
-      noteContainer.removeChild(noteContainer.firstChild);
+    noteContainer.removeChild(noteContainer.firstChild);
   }
   browser.storage.local.clear();
 }

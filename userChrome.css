@@ -1,0 +1,28 @@
+.tabbrowser-tab {
+    max-width: 100px;
+}
+
+#TabsToolbar {
+    margin-left: 32vw;
+    margin-right: 6vw;
+    margin-top: -2px;
+}
+
+#tabbrowser-tabs {
+    margin-top: -6px;
+    margin-bottom: -6px;
+}
+
+#nav-bar{
+    margin-top:-32px !important;
+    margin-right: 70vw!important;
+}
+
+.titlebar-placeholder {
+    margin-top: 4px;
+    margin-bottom: -4px;
+}
+
+.tabbrowser-tab[selected],.tabbrowser-tab:hover{
+    background-color:rgba(255,255,255,0.1)!important;
+}

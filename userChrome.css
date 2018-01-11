@@ -9,9 +9,9 @@
     margin-bottom: -6px;
 }
 
-#nav-bar{
-    margin-top:-32px !important;
-    margin-right: 70vw!important;
+#nav-bar {
+    margin-top: -32px;
+    margin-right: 70vw;
 }
 
 .titlebar-placeholder {
@@ -19,6 +19,6 @@
     margin-bottom: -4px;
 }
 
-.tabbrowser-tab[selected],.tabbrowser-tab:hover{
-    background-color:rgba(255,255,255,0.1)!important;
+.tabbrowser-tab[selected], .tabbrowser-tab:hover{
+    background-color:rgba(255,255,255,0.1);
 }

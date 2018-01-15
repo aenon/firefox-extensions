@@ -1,24 +1,9 @@
+/* hides the native tabs */
 #TabsToolbar {
-    margin-left: 32vw;
-    margin-right: 6vw;
-    margin-top: -2px;
-}
-
-#tabbrowser-tabs {
-    margin-top: 6px;
-    margin-bottom: -6px;
+  margin-right: 50vw;
 }
 
 #nav-bar {
-    margin-top: -32px;
-    margin-right: 70vw;
-}
-
-.titlebar-placeholder {
-    margin-top: 4px;
-    margin-bottom: -4px;
-}
-
-.tabbrowser-tab[selected], .tabbrowser-tab:hover{
-    background-color:rgba(255,255,255,0.1);
+  margin-left: 50vw;
+  margin-top: -32px;
 }

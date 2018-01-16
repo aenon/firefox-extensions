@@ -1,8 +1,9 @@
-/* hides the native tabs */
+/* tabs on the left */
 #TabsToolbar {
   margin-right: 50vw;
 }
 
+/* nav-bar on the right */
 #nav-bar {
   margin-left: 50vw;
   margin-top: -32px;

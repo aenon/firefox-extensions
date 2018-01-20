@@ -1,13 +1,13 @@
 var colours = ["black", "white", "red", "blue", "green", "yellow"];
-var colour = "black";
+var colour = "white";
 var format24 = true;
 
-browser.storage.sync.get('colour').then((res) => {
+browser.storage.sync.get('colour').then(res => {
   colour = res.colour || 'black';
   update();
 });
 
-browser.storage.sync.get('format24').then((res) => {
+browser.storage.sync.get('format24').then(res => {
   var stringFormat = res.format24 || "twentyfour";
   format24 = (stringFormat == "twentyfour");
   update();

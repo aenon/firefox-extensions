@@ -2,6 +2,8 @@
  * <font class="jammer">. Warald asuvpozijcasdf </font>
  */
 jammerClassName = 'jammer'
+
+// advertisements
 atClassName = 'a_t'
 
 const clearElement = elementClassName => {
@@ -18,11 +20,3 @@ try {
 try {
   clearElement(atClassName)
 } catch(error) {}
-
-//
-//
-// const clearAts = atClassName => {
-//
-// }
-//
-// ats = document.getElementsByClassName('a_t')

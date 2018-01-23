@@ -1,0 +1,20 @@
+{
+
+  "manifest_version": 2,
+  "name": "onep3a",
+  "version": "0.1",
+
+  "description": "Remove jammers from 1point3acres.com bbs.",
+
+  "icons": {
+    "48": "icons/icon-400.png"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*.1point3acres.com/*"],
+      "js": ["onep3a.js"]
+    }
+  ]
+
+}

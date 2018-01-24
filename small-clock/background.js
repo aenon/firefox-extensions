@@ -1,67 +1,66 @@
-var colours = ["black", "white", "red", "blue", "green", "yellow"];
-var colour = "white";
-var format24 = true;
-
-browser.storage.sync.get('colour').then(res => {
-  colour = res.colour || 'black';
-  update();
-});
-
-browser.storage.sync.get('format24').then(res => {
-  var stringFormat = res.format24 || "twentyfour";
-  format24 = (stringFormat == "twentyfour");
-  update();
-});
-
-function update() {
-  var date = new Date();
-  var hours = date.getHours();
-
-  if(format24 != true) {
-    hours = hours % 12
-    if(hours == 0){
-      hours = 12;
+// redux-like createStore
+const createStore = (reducer, preloadedState={}) => {
+  let state = preloadedState
+  let listeners = []
+  const getState = () => state
+  const subscribe = (listener) => {
+    listeners.push(listener)
+    return () => {
+      listeners = listeners.filter(l => l !== listener)
     }
   }
-
-  var minutes=  date.getMinutes();
-
-  var canvas = document.createElement("canvas");
-  var context = canvas.getContext("2d");
-  context.fillStyle = colour;
-  context.font = "80px sans-serif";
-  context.fillText(hours, 1, 58);
-  context.font = "62px sans-serif";
-  context.fillText((minutes<10? "0": "") + minutes, 60, 110);
-
-  var imageData = context.getImageData(0, 0, 128, 128);
-
-  browser.browserAction.setIcon({imageData: imageData});
-  browser.browserAction.setTitle({title: date.toString()});
-
-  setTimeout(update, (60-date.getSeconds())*1000);
+  const dispatch = (action) => {
+    state = reducer(state, action)
+    listeners.forEach(listener => listener())
+  }
+  dispatch({})
+  return { getState, dispatch, subscribe}
 }
+
+// reducer
+const reducer = (state, action) => {
+  switch(action.type) {
+    case 'CHANGE':
+      return {colorIndex: (state.colorIndex + 1) % colors.length}
+    default:
+      return state
+  }
+}
+
+// createStore
+const store = createStore(reducer, {colorIndex: 0})
 
 browser.browserAction.onClicked.addListener(() => {
-  var currentIndex = colours.indexOf(colour);
-  var newIndex = (currentIndex + 1) % colours.length;
-  if(newIndex == 0) {
-    format24 = !format24;
-  }
-  browser.storage.sync.set({
-    colour: colours[newIndex],
-    format24: (format24 ? "twentyfour" : "twelve")
-  });
-});
+  store.dispatch({type: 'CHANGE'})
+})
 
-function logStorageChange(changes, area) {
-  if(changes['colour']) {
-    colour = changes['colour'].newValue
-  }
-  if(changes['format24']) {
-    format24 = (changes['format24'].newValue == "twentyfour");
-  }
-  update();
+const colors = ["white", "grey", "black"]
+const render = () => {
+  const color = colors[store.getState().colorIndex]
+  const date = new Date()
+  const dateString = date.toLocaleString(
+    'en-US', {
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: false})
+  const hr = dateString.slice(0, 2)
+  const mn = dateString.slice(3, 5)
+
+  const canvas = document.createElement("canvas")
+  const context = canvas.getContext("2d")
+  context.fillStyle = color
+  context.font = "72px monowidth"
+  context.fillText(hr, 8, 64)
+  context.font = "72px monowidth"
+  context.fillText(mn, 8, 128)
+
+  const imageData = context.getImageData(0, 0, 128, 128)
+
+  browser.browserAction.setIcon({imageData: imageData})
+  browser.browserAction.setTitle({title: date.toString()})
+
+  // setTimeout(render, (60-date.getSeconds())*1000)
+  setTimeout(render, 1)
 }
-
-browser.storage.onChanged.addListener(logStorageChange);
+render()
+store.subscribe(render)

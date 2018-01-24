@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "small-clock",
-  "version": "0.0.6",
+  "version": "0.0.9",
   "description": "A simple and small text based clock which sits in the toolbar. Ideal for fullscreen use of Firefox",
   "background": {
     "scripts": ["background.js"]
@@ -9,7 +9,6 @@
   "browser_action": {
     "default_title": "Small Clock"
   },
-  "permissions": ["storage"],
   "applications": {
       "gecko": {
           "id": "@small-clock"

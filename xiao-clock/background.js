@@ -35,8 +35,11 @@ browser.browserAction.onClicked.addListener(() => {
 })
 
 const colors = ["white", "grey", "black"]
+
+// sets the icon and title
 const render = () => {
   const color = colors[store.getState().colorIndex]
+
   const date = new Date()
   const dateString = date.toLocaleString(
     'en-US', {
@@ -46,6 +49,7 @@ const render = () => {
   const hr = dateString.slice(0, 2)
   const mn = dateString.slice(3, 5)
 
+  // generates the image that contains current time
   const canvas = document.createElement("canvas")
   const context = canvas.getContext("2d")
   context.fillStyle = color
@@ -53,14 +57,12 @@ const render = () => {
   context.fillText(hr, 8, 64)
   context.font = "72px monowidth"
   context.fillText(mn, 8, 128)
-
   const imageData = context.getImageData(0, 0, 128, 128)
-
   browser.browserAction.setIcon({imageData: imageData})
-  browser.browserAction.setTitle({title: date.toString()})
+  browser.browserAction.setTitle({title: date.toISOString().slice(0,10)})
 
-  // setTimeout(render, (60-date.getSeconds())*1000)
-  setTimeout(render, 1)
+  setTimeout(render, (60 - date.getSeconds()) * 1000)
 }
+
 render()
 store.subscribe(render)

@@ -1,17 +1,15 @@
 {
   "manifest_version": 2,
-  "name": "small-clock",
+  "name": "xiao-clock",
   "version": "0.0.9",
   "description": "A simple and small text based clock which sits in the toolbar. Ideal for fullscreen use of Firefox",
+  "icons": {
+    "48": "icons/icon-48.png"
+  },
   "background": {
     "scripts": ["background.js"]
   },
   "browser_action": {
-    "default_title": "Small Clock"
-  },
-  "applications": {
-      "gecko": {
-          "id": "@small-clock"
-      }
-    }
+    "default_title": "Xiao Clock"
+  }
 }

@@ -14,7 +14,7 @@ const createStore = (reducer, preloadedState={}) => {
     listeners.forEach(listener => listener())
   }
   dispatch({})
-  return { getState, dispatch, subscribe}
+  return { getState, dispatch, subscribe }
 }
 
 // reducer
@@ -27,8 +27,10 @@ const reducer = (state, action) => {
   }
 }
 
+const colorIndex = parseInt(localStorage.getItem("smallClockColorIndex") || 0)
+
 // createStore
-const store = createStore(reducer, {colorIndex: 0})
+const store = createStore(reducer, {colorIndex: colorIndex})
 
 browser.browserAction.onClicked.addListener(() => {
   store.dispatch({type: 'CHANGE'})
@@ -38,14 +40,17 @@ const colors = ["white", "grey", "black"]
 
 // sets the icon and title
 const render = () => {
-  const color = colors[store.getState().colorIndex]
+  const colorIndex = store.getState().colorIndex
+  const color = colors[colorIndex]
+  console.log("Current colorIndex is " + colorIndex)
 
   const date = new Date()
   const dateString = date.toLocaleString(
     'en-US', {
       hour: 'numeric',
       minute: 'numeric',
-      hour12: false})
+      hour12: false
+    })
   const hr = dateString.slice(0, 2)
   const mn = dateString.slice(3, 5)
 
@@ -62,7 +67,9 @@ const render = () => {
   browser.browserAction.setTitle({title: date.toISOString().slice(0,10)})
 
   setTimeout(render, (60 - date.getSeconds()) * 1000)
+  localStorage.setItem("smallClockColorIndex", colorIndex)
 }
 
 render()
 store.subscribe(render)
+

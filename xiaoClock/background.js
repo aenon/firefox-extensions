@@ -58,9 +58,9 @@ const render = () => {
   const canvas = document.createElement("canvas")
   const context = canvas.getContext("2d")
   context.fillStyle = color
-  context.font = "72px monowidth"
+  context.font = "bold 80px Verdana"
   context.fillText(hr, 8, 64)
-  context.font = "72px monowidth"
+  context.font = "bold 80px Verdana"
   context.fillText(mn, 8, 128)
   const imageData = context.getImageData(0, 0, 128, 128)
   browser.browserAction.setIcon({imageData: imageData})

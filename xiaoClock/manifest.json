@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "xiao-clock",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A simple and small text based clock which sits in the toolbar. Ideal for fullscreen use of Firefox.",
   "icons": {
     "48": "icons/icon-48.png"

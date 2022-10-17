@@ -50,11 +50,11 @@ const render = () => {
   const date = new Date()
   const dateString = date.toLocaleString(
     'en-US', {
-      hour: 'numeric',
-      minute: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
       hour12
     })
-  // console.log(dateString)
+  console.log(dateString)
   const hr = dateString.slice(0, 2)
   const mn = dateString.slice(3, 5)
   const ampm = dateString.slice(6, 7)
@@ -63,9 +63,9 @@ const render = () => {
   const canvas = document.createElement("canvas")
   const context = canvas.getContext("2d")
   context.fillStyle = color
-  context.font = "bold 78px Verdana"
+  context.font = "bold 72px Verdana"
   context.fillText(hr, 8, 64)
-  context.font = "bold 78px Verdana"
+  context.font = "bold 72px Verdana"
   context.fillText(mn, 8, 128)
   context.font = "bold 36px Verdana"
   context.fillText(ampm, 100, 128)

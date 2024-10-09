@@ -40,12 +40,18 @@ const colorArray = ["white", "grey", "black"]
 const colors = colorArray.concat(colorArray)
 const hours = Array(colorArray.length).fill(true).concat(Array(colorArray.length).fill(false))
 
+// gets the system theme
+const getColorMode = () => window.matchMedia('(prefers-color-scheme: dark)').matches? "dark" : "light"
+
 // sets the icon and title
 const render = () => {
+  const colorMode = getColorMode()
+  console.log("Current colorMode is " + colorMode)
+
   const colorIndex = store.getState().colorIndex
   const color = colors[colorIndex]
   const hour12 = hours[colorIndex]
-  // console.log("Current colorIndex is " + colorIndex)
+  console.log("Current colorIndex is " + colorIndex)
 
   const date = new Date()
   const dateString = date.toLocaleString(

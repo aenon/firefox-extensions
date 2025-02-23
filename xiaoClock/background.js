@@ -1,4 +1,19 @@
-// redux-like createStore
+/**
+ * background.js
+ * 
+ * This file contains the background script for the Xiao Clock Firefox extension.
+ * It manages the state of the extension using a Redux-like pattern, handles user interactions,
+ * and updates the browser action icon and title based on the current time and user preferences.
+ * 
+ * Features:
+ * - Detects system color scheme preference (light/dark mode).
+ * - Allows users to toggle clock colors and remembers the selection.
+ * - Supports 12-hour and 24-hour time formats, which can be toggled via a context menu.
+ * - Updates the browser action icon to display the current time.
+ * - Persists user preferences (color and hour format) using localStorage.
+ */
+
+// redux-like createStore to manage state
 const createStore = (reducer, preloadedState={}) => {
   let state = preloadedState
   let listeners = []
@@ -17,7 +32,7 @@ const createStore = (reducer, preloadedState={}) => {
   return { getState, dispatch, subscribe }
 }
 
-const colors = ["white", "grey", "black"]
+const colors = ["white", "lightgrey", "grey", "black"]
 
 // Detect system color scheme preference
 const getSystemColorScheme = () => {
@@ -25,8 +40,8 @@ const getSystemColorScheme = () => {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-// const initialColorIndex = getSystemColorScheme() === 'dark' ? 0 : 2 // for testing
-const initialColorIndex = parseInt(localStorage.getItem("smallClockColorIndex") || getSystemColorScheme() === 'dark' ? 0 : 2)
+// Set initial color index based on system color scheme
+const initialColorIndex = parseInt(localStorage.getItem("smallClockColorIndex") || (getSystemColorScheme() === 'dark' ? 0 : 3))
 const initialHourFormat = localStorage.getItem("smallClockHourFormat") === '24' ? false : true
 
 // reducer

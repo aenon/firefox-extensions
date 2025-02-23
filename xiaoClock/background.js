@@ -1,4 +1,19 @@
-// redux-like createStore
+/**
+ * background.js
+ * 
+ * This file contains the background script for the Xiao Clock Firefox extension.
+ * It manages the state of the extension using a Redux-like pattern, handles user interactions,
+ * and updates the browser action icon and title based on the current time and user preferences.
+ * 
+ * Features:
+ * - Detects system color scheme preference (light/dark mode).
+ * - Allows users to toggle clock colors and remembers the selection.
+ * - Supports 12-hour and 24-hour time formats, which can be toggled via a context menu.
+ * - Updates the browser action icon to display the current time.
+ * - Persists user preferences (color and hour format) using localStorage.
+ */
+
+// redux-like createStore to manage state
 const createStore = (reducer, preloadedState={}) => {
   let state = preloadedState
   let listeners = []
@@ -17,35 +32,49 @@ const createStore = (reducer, preloadedState={}) => {
   return { getState, dispatch, subscribe }
 }
 
+const colors = ["white", "lightgrey", "grey", "black"]
+
+// Detect system color scheme preference
+const getSystemColorScheme = () => {
+  // return 'light' // for testing
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+// Set initial color index based on system color scheme
+const systemColorScheme = getSystemColorScheme()
+const initialColorIndex = parseInt(localStorage.getItem(`smallClockColorIndex-${systemColorScheme}`) || (systemColorScheme === 'dark' ? 0 : 3))
+const initialHourFormat = localStorage.getItem("smallClockHourFormat") === '24' ? false : true
+
 // reducer
 const reducer = (state, action) => {
+  let newState;
   switch(action.type) {
-    case 'CHANGE':
-      return {colorIndex: (state.colorIndex + 1) % colors.length}
+    case 'CHANGE_COLOR':
+      console.log('Current color index:', state.colorIndex)
+      newState = { ...state, colorIndex: (state.colorIndex + 1) % colors.length }
+      localStorage.setItem(`smallClockColorIndex-${systemColorScheme}`, newState.colorIndex)
+      return newState
+    case 'TOGGLE_HOUR_FORMAT':
+      console.log('Current hour format:', state.hour12)
+      newState = { ...state, hour12: !state.hour12 }
+      localStorage.setItem("smallClockHourFormat", newState.hour12 ? '12' : '24')
+      return newState
     default:
       return state
   }
 }
 
-const colorIndex = parseInt(localStorage.getItem("smallClockColorIndex") || 0)
-
 // createStore
-const store = createStore(reducer, {colorIndex: colorIndex})
+const store = createStore(reducer, { colorIndex: initialColorIndex, hour12: initialHourFormat })
 
 browser.browserAction.onClicked.addListener(() => {
-  store.dispatch({type: 'CHANGE'})
+  store.dispatch({ type: 'CHANGE_COLOR' })
 })
-
-const colorArray = ["white", "grey", "black"]
-const colors = colorArray.concat(colorArray)
-const hours = Array(colorArray.length).fill(true).concat(Array(colorArray.length).fill(false))
 
 // sets the icon and title
 const render = () => {
-  const colorIndex = store.getState().colorIndex
+  const { colorIndex, hour12 } = store.getState()
   const color = colors[colorIndex]
-  const hour12 = hours[colorIndex]
-  // console.log("Current colorIndex is " + colorIndex)
 
   const date = new Date()
   const dateString = date.toLocaleString(
@@ -70,13 +99,24 @@ const render = () => {
   context.font = "bold 36px Verdana"
   context.fillText(ampm, 100, 128)
   const imageData = context.getImageData(0, 0, 128, 128)
-  browser.browserAction.setIcon({imageData: imageData})
-  browser.browserAction.setTitle({title: date.toISOString().slice(0,10)})
+  browser.browserAction.setIcon({ imageData: imageData })
+  browser.browserAction.setTitle({ title: date.toISOString().slice(0, 10) })
 
   setTimeout(render, (60 - date.getSeconds()) * 1000)
-  localStorage.setItem("smallClockColorIndex", colorIndex)
 }
 
 render()
 store.subscribe(render)
 
+// Create context menu
+browser.contextMenus.create({
+  id: "toggleHourFormat",
+  title: "12/24 Hour Format",
+  contexts: ["browser_action"]
+})
+
+browser.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "toggleHourFormat") {
+    store.dispatch({ type: 'TOGGLE_HOUR_FORMAT' })
+  }
+})

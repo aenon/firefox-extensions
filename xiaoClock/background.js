@@ -17,35 +17,44 @@ const createStore = (reducer, preloadedState={}) => {
   return { getState, dispatch, subscribe }
 }
 
+const colors = ["white", "grey", "black"]
+
+// Detect system color scheme preference
+const getSystemColorScheme = () => {
+  // return 'light' // for testing
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+// const initialColorIndex = getSystemColorScheme() === 'dark' ? 0 : 2 // for testing
+const initialColorIndex = parseInt(localStorage.getItem("smallClockColorIndex") || getSystemColorScheme() === 'dark' ? 0 : 2)
+const initialHourFormat = localStorage.getItem("smallClockHourFormat") === '24' ? false : true
+
 // reducer
 const reducer = (state, action) => {
   switch(action.type) {
-    case 'CHANGE':
-      return {colorIndex: (state.colorIndex + 1) % colors.length}
+    case 'CHANGE_COLOR':
+      console.log('Current color index:', state.colorIndex)
+      return { ...state, colorIndex: (state.colorIndex + 1) % colors.length }
+    case 'TOGGLE_HOUR_FORMAT':
+      console.log('Current hour format:', state.hour12)
+      return { ...state, hour12: !state.hour12 }
     default:
       return state
   }
 }
 
-const colorIndex = parseInt(localStorage.getItem("smallClockColorIndex") || 0)
-
 // createStore
-const store = createStore(reducer, {colorIndex: colorIndex})
+const store = createStore(reducer, { colorIndex: initialColorIndex, hour12: initialHourFormat })
 
 browser.browserAction.onClicked.addListener(() => {
-  store.dispatch({type: 'CHANGE'})
+  store.dispatch({ type: 'CHANGE_COLOR' })
 })
-
-const colorArray = ["white", "grey", "black"]
-const colors = colorArray.concat(colorArray)
-const hours = Array(colorArray.length).fill(true).concat(Array(colorArray.length).fill(false))
 
 // sets the icon and title
 const render = () => {
-  const colorIndex = store.getState().colorIndex
+  const { colorIndex, hour12 } = store.getState()
+  const systemColorScheme = getSystemColorScheme()
   const color = colors[colorIndex]
-  const hour12 = hours[colorIndex]
-  // console.log("Current colorIndex is " + colorIndex)
 
   const date = new Date()
   const dateString = date.toLocaleString(
@@ -70,13 +79,26 @@ const render = () => {
   context.font = "bold 36px Verdana"
   context.fillText(ampm, 100, 128)
   const imageData = context.getImageData(0, 0, 128, 128)
-  browser.browserAction.setIcon({imageData: imageData})
-  browser.browserAction.setTitle({title: date.toISOString().slice(0,10)})
+  browser.browserAction.setIcon({ imageData: imageData })
+  browser.browserAction.setTitle({ title: date.toISOString().slice(0, 10) })
 
   setTimeout(render, (60 - date.getSeconds()) * 1000)
   localStorage.setItem("smallClockColorIndex", colorIndex)
+  localStorage.setItem("smallClockHourFormat", hour12 ? '12' : '24')
 }
 
 render()
 store.subscribe(render)
 
+// Create context menu
+browser.contextMenus.create({
+  id: "toggleHourFormat",
+  title: "12/24 Hour Format",
+  contexts: ["browser_action"]
+})
+
+browser.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "toggleHourFormat") {
+    store.dispatch({ type: 'TOGGLE_HOUR_FORMAT' })
+  }
+})

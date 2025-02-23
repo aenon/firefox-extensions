@@ -41,18 +41,24 @@ const getSystemColorScheme = () => {
 }
 
 // Set initial color index based on system color scheme
-const initialColorIndex = parseInt(localStorage.getItem("smallClockColorIndex") || (getSystemColorScheme() === 'dark' ? 0 : 3))
+const systemColorScheme = getSystemColorScheme()
+const initialColorIndex = parseInt(localStorage.getItem(`smallClockColorIndex-${systemColorScheme}`) || (systemColorScheme === 'dark' ? 0 : 3))
 const initialHourFormat = localStorage.getItem("smallClockHourFormat") === '24' ? false : true
 
 // reducer
 const reducer = (state, action) => {
+  let newState;
   switch(action.type) {
     case 'CHANGE_COLOR':
       console.log('Current color index:', state.colorIndex)
-      return { ...state, colorIndex: (state.colorIndex + 1) % colors.length }
+      newState = { ...state, colorIndex: (state.colorIndex + 1) % colors.length }
+      localStorage.setItem(`smallClockColorIndex-${systemColorScheme}`, newState.colorIndex)
+      return newState
     case 'TOGGLE_HOUR_FORMAT':
       console.log('Current hour format:', state.hour12)
-      return { ...state, hour12: !state.hour12 }
+      newState = { ...state, hour12: !state.hour12 }
+      localStorage.setItem("smallClockHourFormat", newState.hour12 ? '12' : '24')
+      return newState
     default:
       return state
   }
@@ -68,7 +74,6 @@ browser.browserAction.onClicked.addListener(() => {
 // sets the icon and title
 const render = () => {
   const { colorIndex, hour12 } = store.getState()
-  const systemColorScheme = getSystemColorScheme()
   const color = colors[colorIndex]
 
   const date = new Date()
@@ -98,8 +103,6 @@ const render = () => {
   browser.browserAction.setTitle({ title: date.toISOString().slice(0, 10) })
 
   setTimeout(render, (60 - date.getSeconds()) * 1000)
-  localStorage.setItem("smallClockColorIndex", colorIndex)
-  localStorage.setItem("smallClockHourFormat", hour12 ? '12' : '24')
 }
 
 render()

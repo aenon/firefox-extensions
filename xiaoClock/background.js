@@ -36,12 +36,11 @@ const colors = ["white", "lightgrey", "grey", "black"]
 
 // Detect system color scheme preference
 const getSystemColorScheme = () => {
-  // return 'light' // for testing
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
 // Set initial color index based on system color scheme
-const systemColorScheme = getSystemColorScheme()
+let systemColorScheme = getSystemColorScheme()
 const initialColorIndex = parseInt(localStorage.getItem(`smallClockColorIndex-${systemColorScheme}`) || (systemColorScheme === 'dark' ? 0 : 3))
 const initialHourFormat = localStorage.getItem("smallClockHourFormat") === '24' ? false : true
 
@@ -58,6 +57,10 @@ const reducer = (state, action) => {
       console.log('Current hour format:', state.hour12)
       newState = { ...state, hour12: !state.hour12 }
       localStorage.setItem("smallClockHourFormat", newState.hour12 ? '12' : '24')
+      return newState
+    case 'SYSTEM_COLOR_SCHEME_CHANGE':
+      console.log('System color scheme changed:', action.colorScheme)
+      newState = { ...state, colorIndex: parseInt(localStorage.getItem(`smallClockColorIndex-${action.colorScheme}`) || (action.colorScheme === 'dark' ? 0 : 3)) }
       return newState
     default:
       return state
@@ -107,6 +110,12 @@ const render = () => {
 
 render()
 store.subscribe(render)
+
+// Listen for system color scheme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+  systemColorScheme = e.matches ? 'dark' : 'light'
+  store.dispatch({ type: 'SYSTEM_COLOR_SCHEME_CHANGE', colorScheme: systemColorScheme })
+})
 
 // Create context menu
 browser.contextMenus.create({

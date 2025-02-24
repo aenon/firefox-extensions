@@ -1,9 +1,0 @@
-/* hides the native tabs */
-#TabsToolbar {
-  visibility: collapse;
-}
-
-#nav-bar {
-    margin-top: -4px;
-    margin-right: 6vw;
-}

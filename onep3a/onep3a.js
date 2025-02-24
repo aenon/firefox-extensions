@@ -1,5 +1,5 @@
-/* Example of an 1point3acres.com bbs jammer:
- * <font class="jammer">. Warald asuvpozijcasdf </font>
+/* Example of an 1p3a bbs jammer:
+ * <font class="jammer">. Wasssss asuvpozijcasdf </font>
  */
 jammerClassName = 'jammer'
 

@@ -49,17 +49,17 @@ const reducer = (state, action) => {
   let newState;
   switch(action.type) {
     case 'CHANGE_COLOR':
-      console.log('Current color index:', state.colorIndex)
+
       newState = { ...state, colorIndex: (state.colorIndex + 1) % colors.length }
       localStorage.setItem(`smallClockColorIndex-${systemColorScheme}`, newState.colorIndex)
       return newState
     case 'TOGGLE_HOUR_FORMAT':
-      console.log('Current hour format:', state.hour12)
+
       newState = { ...state, hour12: !state.hour12 }
       localStorage.setItem("smallClockHourFormat", newState.hour12 ? '12' : '24')
       return newState
     case 'SYSTEM_COLOR_SCHEME_CHANGE':
-      console.log('System color scheme changed:', action.colorScheme)
+
       newState = { ...state, colorIndex: parseInt(localStorage.getItem(`smallClockColorIndex-${action.colorScheme}`) || (action.colorScheme === 'dark' ? 0 : 3)) }
       return newState
     default:
@@ -80,16 +80,16 @@ const render = () => {
   const color = colors[colorIndex]
 
   const date = new Date()
-  const dateString = date.toLocaleString(
-    'en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12
-    })
-  console.log(dateString)
-  const hr = dateString.slice(0, 2)
-  const mn = dateString.slice(3, 5)
-  const ampm = dateString.slice(6, 7)
+  let hr = date.getHours()
+  let mn = date.getMinutes()
+  let ampm = ''
+  if (hour12) {
+    ampm = hr >= 12 ? 'PM' : 'AM';
+    hr = hr % 12;
+    hr = hr ? hr : 12;
+  }
+  hr = hr.toString().padStart(2, '0');
+  mn = mn.toString().padStart(2, '0');
 
   // generates the image that contains current time
   const canvas = document.createElement("canvas")
@@ -105,11 +105,24 @@ const render = () => {
   browser.browserAction.setIcon({ imageData: imageData })
   browser.browserAction.setTitle({ title: date.toISOString().slice(0, 10) })
 
-  setTimeout(render, (60 - date.getSeconds()) * 1000)
+
 }
 
-render()
+
+let lastMinute = -1
+
+const tick = () => {
+  const currentMinute = new Date().getMinutes()
+  if (currentMinute !== lastMinute) {
+    lastMinute = currentMinute
+    render()
+  }
+}
+
+setInterval(tick, 1000)
+
 store.subscribe(render)
+
 
 // Listen for system color scheme changes
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {

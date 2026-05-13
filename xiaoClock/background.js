@@ -40,20 +40,96 @@ const colorArray = ["white", "grey", "black"]
 const colors = colorArray.concat(colorArray)
 const hours = Array(colorArray.length).fill(true).concat(Array(colorArray.length).fill(false))
 
+// === Timezone submenu ===
+const TZ_ROOT = "tz-root"
+
+const TZ_MENU = [
+  { id: TZ_ROOT, title: "Timezone" },
+  // Favorites
+  { id: "tz-local", parentId: TZ_ROOT, title: "Local" },
+  { id: "tz-Asia/Shanghai", parentId: TZ_ROOT, title: "Beijing" },
+  { id: "tz-America/Los_Angeles", parentId: TZ_ROOT, title: "San Jose" },
+  // Americas
+  { id: "tz-americas", parentId: TZ_ROOT, title: "Americas" },
+  { id: "tz-America/New_York", parentId: "tz-americas", title: "New York" },
+  { id: "tz-America/Toronto", parentId: "tz-americas", title: "Toronto" },
+  { id: "tz-America/Chicago", parentId: "tz-americas", title: "Chicago" },
+  { id: "tz-America/Denver", parentId: "tz-americas", title: "Denver" },
+  { id: "tz-America/Anchorage", parentId: "tz-americas", title: "Anchorage" },
+  { id: "tz-America/Mexico_City", parentId: "tz-americas", title: "Mexico City" },
+  { id: "tz-America/Sao_Paulo", parentId: "tz-americas", title: "São Paulo" },
+  { id: "tz-America/Buenos_Aires", parentId: "tz-americas", title: "Buenos Aires" },
+  { id: "tz-America/Lima", parentId: "tz-americas", title: "Lima" },
+  // Europe
+  { id: "tz-europe", parentId: TZ_ROOT, title: "Europe" },
+  { id: "tz-Europe/London", parentId: "tz-europe", title: "London" },
+  { id: "tz-Europe/Paris", parentId: "tz-europe", title: "Paris" },
+  { id: "tz-Europe/Berlin", parentId: "tz-europe", title: "Berlin" },
+  { id: "tz-Europe/Athens", parentId: "tz-europe", title: "Athens" },
+  { id: "tz-Europe/Istanbul", parentId: "tz-europe", title: "Istanbul" },
+  { id: "tz-Europe/Moscow", parentId: "tz-europe", title: "Moscow" },
+  // Africa
+  { id: "tz-africa", parentId: TZ_ROOT, title: "Africa" },
+  { id: "tz-Africa/Lagos", parentId: "tz-africa", title: "Lagos" },
+  { id: "tz-Africa/Cairo", parentId: "tz-africa", title: "Cairo" },
+  { id: "tz-Africa/Nairobi", parentId: "tz-africa", title: "Nairobi" },
+  // Asia
+  { id: "tz-asia", parentId: TZ_ROOT, title: "Asia" },
+  { id: "tz-Asia/Tokyo", parentId: "tz-asia", title: "Tokyo" },
+  { id: "tz-Asia/Seoul", parentId: "tz-asia", title: "Seoul" },
+  { id: "tz-Asia/Dubai", parentId: "tz-asia", title: "Dubai" },
+  { id: "tz-Asia/Kolkata", parentId: "tz-asia", title: "Kolkata" },
+  // Pacific
+  { id: "tz-pacific", parentId: TZ_ROOT, title: "Pacific" },
+  { id: "tz-Australia/Sydney", parentId: "tz-pacific", title: "Sydney" },
+  { id: "tz-Pacific/Auckland", parentId: "tz-pacific", title: "Auckland" },
+  { id: "tz-Pacific/Fiji", parentId: "tz-pacific", title: "Fiji" },
+  { id: "tz-Pacific/Honolulu", parentId: "tz-pacific", title: "Honolulu" },
+]
+
+// Create context menu structure
+browser.menus.removeAll().then(() => {
+  for (const item of TZ_MENU) {
+    browser.menus.create({
+      id: item.id,
+      parentId: item.parentId,
+      title: item.title,
+      contexts: ["browser_action"],
+    })
+  }
+})
+
+// Handle timezone selection
+browser.menus.onClicked.addListener((info) => {
+  if (typeof info.menuItemId !== 'string' || !info.menuItemId.startsWith("tz-") || info.menuItemId === TZ_ROOT) return
+
+  const tz = info.menuItemId === "tz-local" ? "" : info.menuItemId.slice(3)
+  localStorage.setItem("smallClockTimezone", tz)
+  clearTimeout(renderTimer)
+  render()
+})
+
 // sets the icon and title
+let renderTimer = null
+
 const render = () => {
+  clearTimeout(renderTimer)
+
   const colorIndex = store.getState().colorIndex
   const color = colors[colorIndex]
   const hour12 = hours[colorIndex]
-  // console.log("Current colorIndex is " + colorIndex)
 
   const date = new Date()
-  const dateString = date.toLocaleString(
-    'en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12
-    })
+  let tz = localStorage.getItem("smallClockTimezone")
+  if (tz) {
+    try { date.toLocaleString('en-US', { timeZone: tz }) } catch (e) { tz = null }
+  }
+  const dateString = date.toLocaleString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12,
+    ...(tz && { timeZone: tz }),
+  })
   console.log(dateString)
   const hr = dateString.slice(0, 2)
   const mn = dateString.slice(3, 5)
@@ -71,12 +147,15 @@ const render = () => {
   context.fillText(ampm, 100, 128)
   const imageData = context.getImageData(0, 0, 128, 128)
   browser.browserAction.setIcon({imageData: imageData})
-  browser.browserAction.setTitle({title: date.toISOString().slice(0,10)})
+  const titleTz = tz || undefined
+  browser.browserAction.setTitle({title: date.toLocaleDateString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric',
+    ...(titleTz && { timeZone: titleTz }),
+  })})
 
-  setTimeout(render, (60 - date.getSeconds()) * 1000)
+  renderTimer = setTimeout(render, (60 - date.getSeconds()) * 1000)
   localStorage.setItem("smallClockColorIndex", colorIndex)
 }
 
 render()
 store.subscribe(render)
-

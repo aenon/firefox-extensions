@@ -8,4 +8,5 @@ Forked from [Small-Clock by David Illsley](https://github.com/davidillsley/small
 
 - Displays time in the toolbar as a badge
 - 12/24-hour format support
+- Timezone selection via right-click menu (30+ cities)
 - Customizable color (persisted via localStorage)

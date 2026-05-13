@@ -1,2 +1,0 @@
-# borderify
-Firefox extension

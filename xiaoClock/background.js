@@ -27,7 +27,16 @@ const reducer = (state, action) => {
   }
 }
 
-const colorIndex = parseInt(localStorage.getItem("smallClockColorIndex") || 0)
+let colorIndex = parseInt(localStorage.getItem("smallClockColorIndex") || 0)
+
+// Migration from old 6-state cycle (color+format combined → separated)
+if (colorIndex >= 3 && !localStorage.getItem("smallClockHour12")) {
+  colorIndex = colorIndex - 3
+  localStorage.setItem("smallClockColorIndex", colorIndex)
+  localStorage.setItem("smallClockHour12", "false")
+}
+
+const colors = ["white", "grey", "black"]
 
 // createStore
 const store = createStore(reducer, {colorIndex: colorIndex})
@@ -35,10 +44,6 @@ const store = createStore(reducer, {colorIndex: colorIndex})
 browser.browserAction.onClicked.addListener(() => {
   store.dispatch({type: 'CHANGE'})
 })
-
-const colorArray = ["white", "grey", "black"]
-const colors = colorArray.concat(colorArray)
-const hours = Array(colorArray.length).fill(true).concat(Array(colorArray.length).fill(false))
 
 // === Timezone submenu ===
 const TZ_ROOT = "tz-root"
@@ -49,6 +54,8 @@ const TZ_MENU = [
   { id: "tz-local", parentId: TZ_ROOT, title: "Local" },
   { id: "tz-Asia/Shanghai", parentId: TZ_ROOT, title: "Beijing" },
   { id: "tz-America/Los_Angeles", parentId: TZ_ROOT, title: "San Jose" },
+  // Format
+  { id: "tz-format-12h", parentId: TZ_ROOT, title: "12-hour Format", type: "checkbox" },
   // Americas
   { id: "tz-americas", parentId: TZ_ROOT, title: "Americas" },
   { id: "tz-America/New_York", parentId: "tz-americas", title: "New York" },
@@ -90,18 +97,30 @@ const TZ_MENU = [
 // Create context menu structure
 browser.menus.removeAll().then(() => {
   for (const item of TZ_MENU) {
-    browser.menus.create({
+    const props = {
       id: item.id,
       parentId: item.parentId,
       title: item.title,
       contexts: ["browser_action"],
-    })
+    }
+    if (item.type === "checkbox") {
+      props.type = "checkbox"
+      props.checked = localStorage.getItem("smallClockHour12") !== "false"
+    }
+    browser.menus.create(props)
   }
 })
 
-// Handle timezone selection
+// Handle menu clicks
 browser.menus.onClicked.addListener((info) => {
   if (typeof info.menuItemId !== 'string' || !info.menuItemId.startsWith("tz-") || info.menuItemId === TZ_ROOT) return
+
+  if (info.menuItemId === "tz-format-12h") {
+    localStorage.setItem("smallClockHour12", info.checked)
+    clearTimeout(renderTimer)
+    render()
+    return
+  }
 
   const tz = info.menuItemId === "tz-local" ? "" : info.menuItemId.slice(3)
   localStorage.setItem("smallClockTimezone", tz)
@@ -117,7 +136,7 @@ const render = () => {
 
   const colorIndex = store.getState().colorIndex
   const color = colors[colorIndex]
-  const hour12 = hours[colorIndex]
+  const hour12 = localStorage.getItem("smallClockHour12") !== "false"
 
   const date = new Date()
   let tz = localStorage.getItem("smallClockTimezone")

@@ -22,6 +22,8 @@ const reducer = (state, action) => {
   switch(action.type) {
     case 'CHANGE':
       return {colorIndex: (state.colorIndex + 1) % colors.length}
+    case 'SET_COLOR':
+      return {colorIndex: action.colorIndex}
     default:
       return state
   }
@@ -36,7 +38,23 @@ if (colorIndex >= 3 && !localStorage.getItem("smallClockHour12")) {
   localStorage.setItem("smallClockHour12", "false")
 }
 
-const colors = ["white", "grey", "black"]
+const colors = ["white", "grey", "lightgrey", "black"]
+const DARK_FIRST_COLOR = 0  // white
+const LIGHT_FIRST_COLOR = 3 // black
+
+// Set initial color based on system color scheme (only on first run)
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)')
+if (!localStorage.getItem("smallClockColorIndex") && localStorage.getItem("smallClockHour12") === null) {
+  colorIndex = prefersDark.matches ? DARK_FIRST_COLOR : LIGHT_FIRST_COLOR
+  localStorage.setItem("smallClockColorIndex", colorIndex)
+}
+
+// Listen for system color scheme changes
+prefersDark.addEventListener('change', (e) => {
+  const idx = e.matches ? DARK_FIRST_COLOR : LIGHT_FIRST_COLOR
+  localStorage.setItem("smallClockColorIndex", idx)
+  store.dispatch({type: 'SET_COLOR', colorIndex: idx})
+})
 
 // createStore
 const store = createStore(reducer, {colorIndex: colorIndex})

@@ -7,6 +7,6 @@ Forked from [Small-Clock by David Illsley](https://github.com/davidillsley/small
 ## Features
 
 - Displays time in the toolbar as a badge
-- 12/24-hour format support
+- 12/24-hour format support via right-click toggle
 - Timezone selection via right-click menu (30+ cities)
-- Customizable color (persisted via localStorage)
+- Customizable color (persisted via localStorage, adapts to system dark/light mode)

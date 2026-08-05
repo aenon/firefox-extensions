@@ -29,6 +29,7 @@ const reducer = (state, action) => {
   }
 }
 
+let lastPersistedColorIndex = -1
 let colorIndex = parseInt(localStorage.getItem("smallClockColorIndex") || 0)
 
 // Migration from old 6-state cycle (color+format combined → separated)
@@ -59,6 +60,10 @@ prefersDark.addEventListener('change', (e) => {
 // createStore
 const store = createStore(reducer, {colorIndex: colorIndex})
 
+// Reusable canvas and context for icon rendering
+const iconCanvas = document.createElement("canvas")
+const iconContext = iconCanvas.getContext("2d")
+
 browser.browserAction.onClicked.addListener(() => {
   store.dispatch({type: 'CHANGE'})
 })
@@ -72,8 +77,6 @@ const TZ_MENU = [
   { id: "tz-local", parentId: TZ_ROOT, title: "Local" },
   { id: "tz-Asia/Shanghai", parentId: TZ_ROOT, title: "Beijing" },
   { id: "tz-America/Los_Angeles", parentId: TZ_ROOT, title: "San Jose" },
-  // Format
-  { id: "tz-format-12h", parentId: TZ_ROOT, title: "12-hour Format", type: "checkbox" },
   // Americas
   { id: "tz-americas", parentId: TZ_ROOT, title: "Americas" },
   { id: "tz-America/New_York", parentId: "tz-americas", title: "New York" },
@@ -110,6 +113,8 @@ const TZ_MENU = [
   { id: "tz-Pacific/Auckland", parentId: "tz-pacific", title: "Auckland" },
   { id: "tz-Pacific/Fiji", parentId: "tz-pacific", title: "Fiji" },
   { id: "tz-Pacific/Honolulu", parentId: "tz-pacific", title: "Honolulu" },
+  // Format (top-level, not under Timezone)
+  { id: "tz-format-12h", title: "12-hour Format", type: "checkbox" },
 ]
 
 // Create context menu structure
@@ -167,22 +172,22 @@ const render = () => {
     hour12,
     ...(tz && { timeZone: tz }),
   })
-  console.log(dateString)
-  const hr = dateString.slice(0, 2)
-  const mn = dateString.slice(3, 5)
-  const ampm = dateString.slice(6, 7)
+  const match = /^(\d{1,2}):(\d{2})(?:\s+([AaPp][Mm]))?$/.exec(dateString)
+  const hr = match[1].padStart(2, '0')
+  const mn = match[2]
+  const ampm = match[3] || ''
 
   // generates the image that contains current time
-  const canvas = document.createElement("canvas")
-  const context = canvas.getContext("2d")
-  context.fillStyle = color
-  context.font = "bold 72px Verdana"
-  context.fillText(hr, 8, 64)
-  context.font = "bold 72px Verdana"
-  context.fillText(mn, 8, 128)
-  context.font = "bold 36px Verdana"
-  context.fillText(ampm, 100, 128)
-  const imageData = context.getImageData(0, 0, 128, 128)
+  iconCanvas.width = 128
+  iconCanvas.height = 128
+  iconContext.clearRect(0, 0, 128, 128)
+  iconContext.fillStyle = color
+  iconContext.font = "bold 72px Verdana"
+  iconContext.fillText(hr, 8, 64)
+  iconContext.fillText(mn, 8, 128)
+  iconContext.font = "bold 36px Verdana"
+  iconContext.fillText(ampm, 100, 128)
+  const imageData = iconContext.getImageData(0, 0, 128, 128)
   browser.browserAction.setIcon({imageData: imageData})
   const titleTz = tz || undefined
   browser.browserAction.setTitle({title: date.toLocaleDateString('en-US', {
@@ -190,8 +195,11 @@ const render = () => {
     ...(titleTz && { timeZone: titleTz }),
   })})
 
+  if (colorIndex !== lastPersistedColorIndex) {
+    localStorage.setItem("smallClockColorIndex", colorIndex)
+    lastPersistedColorIndex = colorIndex
+  }
   renderTimer = setTimeout(render, (60 - date.getSeconds()) * 1000)
-  localStorage.setItem("smallClockColorIndex", colorIndex)
 }
 
 render()

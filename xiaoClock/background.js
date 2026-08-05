@@ -64,9 +64,12 @@ const store = createStore(reducer, {colorIndex: colorIndex})
 const iconCanvas = document.createElement("canvas")
 const iconContext = iconCanvas.getContext("2d")
 
-browser.browserAction.onClicked.addListener(() => {
-  store.dispatch({type: 'CHANGE'})
-})
+// Remove onClicked listener — color selection is now in the menu
+// browser.browserAction.onClicked was triggering on right-click too
+
+// === Color submenu ===
+const COLOR_ROOT = "color-root"
+const colorLabels = ["White", "Grey", "Light Grey", "Black"]
 
 // === Timezone submenu ===
 const TZ_ROOT = "tz-root"
@@ -117,6 +120,17 @@ const TZ_MENU = [
   { id: "tz-format-12h", title: "12-hour Format", type: "checkbox" },
 ]
 
+// Color submenu
+const COLOR_MENU = [
+  { id: COLOR_ROOT, title: "Color" },
+  ...colors.map((_, i) => ({
+    id: `color-${i}`,
+    parentId: COLOR_ROOT,
+    title: colorLabels[i],
+    type: "checkbox",
+  })),
+]
+
 // Create context menu structure
 browser.menus.removeAll().then(() => {
   for (const item of TZ_MENU) {
@@ -132,11 +146,44 @@ browser.menus.removeAll().then(() => {
     }
     browser.menus.create(props)
   }
+  for (const item of COLOR_MENU) {
+    const props = {
+      id: item.id,
+      parentId: item.parentId,
+      title: item.title,
+      contexts: ["browser_action"],
+    }
+    if (item.type === "checkbox") {
+      props.type = "checkbox"
+      const colorIndex = store.getState().colorIndex
+      props.checked = item.id === `color-${colorIndex}`
+    }
+    browser.menus.create(props)
+  }
 })
+
+function syncColorMenu() {
+  const colorIndex = store.getState().colorIndex
+  colors.forEach((_, i) => {
+    browser.menus.update(`color-${i}`, { checked: i === colorIndex })
+  })
+}
 
 // Handle menu clicks
 browser.menus.onClicked.addListener((info) => {
-  if (typeof info.menuItemId !== 'string' || !info.menuItemId.startsWith("tz-") || info.menuItemId === TZ_ROOT) return
+  if (typeof info.menuItemId !== 'string') return
+
+  // Color selection
+  if (info.menuItemId.startsWith("color-")) {
+    const idx = parseInt(info.menuItemId.slice(6))
+    if (idx >= 0 && idx < colors.length) {
+      store.dispatch({type: 'SET_COLOR', colorIndex: idx})
+      return
+    }
+  }
+
+  // Timezone / format
+  if (!info.menuItemId.startsWith("tz-") || info.menuItemId === TZ_ROOT) return
 
   if (info.menuItemId === "tz-format-12h") {
     localStorage.setItem("smallClockHour12", info.checked)
@@ -199,6 +246,7 @@ const render = () => {
     localStorage.setItem("smallClockColorIndex", colorIndex)
     lastPersistedColorIndex = colorIndex
   }
+  syncColorMenu()
   renderTimer = setTimeout(render, (60 - date.getSeconds()) * 1000)
 }
 
